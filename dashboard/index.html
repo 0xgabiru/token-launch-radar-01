@@ -1,14 +1,141 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Token Radar: pre-token protocols ranked by implied value</title>
+<title>Launch Radar — which pre-token protocol is worth farming next</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<a class="skip" href="#board">Skip to the board</a>
-<main id="board" tabindex="-1" aria-busy="true"></main>
+<header class="top">
+  <div>
+    <h1>Launch Radar</h1>
+    <p class="sub">Which pre-token protocol is worth farming next, and what to do about it — ranked by implied value, from the snapshot's own figures.</p>
+  </div>
+  <div class="meta">
+    <div>Snapshot <b>14 Nov 2026</b> · DefiLlama via make.fun</div>
+    <div><b>758</b> protocols at or above $5M TVL · <b>198</b> ranked · watchlist <b>40 / 40</b></div>
+    <div>Implied value is this entry's claim, never make.fun's. Nothing here predicts whether or when a token is issued.</div>
+  </div>
+</header>
+
+<section class="kpis" id="kpis" aria-label="Headline figures">
+  <div class="kpi"><span class="k">Ranked</span><b>198</b><span class="d">40 watchlist · 138 early · 20 off-list</span></div>
+  <div class="kpi"><span class="k">Total implied value</span><b>$1.22B</b><span class="d">sum of all 198 rows</span></div>
+  <div class="kpi"><span class="k">Worth farming</span><b id="kpiFarm">0 of 198</b><span class="d">at the default scenario — see the controls</span></div>
+  <div class="kpi"><span class="k">Rank 1</span><b>Steakhouse Financial</b><span class="d">$66.0M implied · odds 0.73</span></div>
+  <div class="kpi"><span class="k">Value model miss</span><b>×3.40</b><span class="d">leave-one-out, median — flat 0.25× misses ×4.91</span></div>
+  <div class="kpi"><span class="k">Token base rate</span><b>55.2%</b><span class="d">244 of 442 eligible peers record a token</span></div>
+</section>
+
+<p class="model-line">Implied value = <b>value if it launches</b> × <b>token odds</b>. Value if it launches comes from the size curve fitted on the 128 traded tokens: <b>log(mcap) = 6.965 + 0.522 · log(TVL)</b>. Token odds come from a logit on the 442 eligible peers: age, size and 7-day growth. Every term that did not beat the size curve in <i>both</i> held-out tests is listed under “tested, not used” — none of them enters a price.</p>
+
+<section class="ledger" aria-label="Where every protocol went">
+  <h2>Ledger — every one of the 758 protocols, exactly one group</h2>
+  <div class="bar" id="ledgerBar" title="Share of the 758 protocols in each group"></div>
+  <div class="chips" id="ledgerChips"></div>
+  <p class="note">Ranked means pre-token and eligible. “Early” is below the $50M watchlist floor; “off-list” is at or above the floor but left off the watchlist. A protocol that records a token is never ranked — it is a comp, or it is recorded with no usable cap. Groups are applied in the order shown, so nothing is counted twice and the ledger sums to 758.</p>
+</section>
+
+<section class="controls" aria-label="Board controls">
+  <input id="q" type="search" placeholder="Search name or slug…" aria-label="Search">
+  <select id="badge" aria-label="Badge filter">
+    <option value="">All badges</option><option value="Watchlist">Watchlist</option><option value="Early">Early</option><option value="Off-list">Off-list</option><option value="Kin">Kin</option>
+  </select>
+  <select id="verdict" aria-label="Verdict filter">
+    <option value="">All verdicts</option><option value="FARM">FARM</option><option value="MARGINAL">MARGINAL</option><option value="SKIP">SKIP</option>
+  </select>
+  <select id="sort" aria-label="Sort">
+    <option value="implied">Sort: implied value</option><option value="tvl">Sort: TVL</option><option value="odds">Sort: token odds</option><option value="age">Sort: age</option><option value="net">Sort: net $</option>
+  </select>
+  <label class="ctl">Deposit <select id="depScale"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+  <label class="ctl">Drop share <input id="dropShare" type="range" min="2" max="15" step="1" value="7"> <b id="dropVal">7%</b></label>
+  <span class="tabs"><button id="tabBoard" class="on">Board</button><button id="tabLive">Live tokens</button></span>
+  <span id="countLine" class="count"></span>
+</section>
+
+<main>
+  <table id="board" aria-label="Ranked board">
+    <thead><tr>
+      <th data-k="rank">#</th><th data-k="name">Protocol</th><th data-k="tvl">TVL</th><th data-k="chg">7d</th><th data-k="age">Age</th><th data-k="odds">Odds</th><th data-k="value">Value if launches</th><th data-k="implied">Implied</th><th>P25–P75</th><th data-k="verdict">Verdict</th><th data-k="net">Net $</th><th data-k="neth">Net / h</th><th>Rank P10–P90</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <table id="live" class="hidden" aria-label="Traded tokens">
+    <thead><tr><th>#</th><th>Protocol</th><th>Category</th><th>TVL</th><th>Market cap</th><th>Cap / TVL</th><th>Model cap (held out)</th></tr></thead>
+    <tbody id="liveRows"></tbody>
+  </table>
+  <p class="note" id="boardNote">Click a row for the detail view: how the figure is made, the nearest priced peers, and the farm plan with its costs and time. “Records no token” means DefiLlama carries no token for it — not that it has none.</p>
+</main>
+
+<section id="detail" class="hidden" aria-label="Protocol detail"></section>
+
+<section class="scatter" aria-label="Size curve">
+  <h2>The size curve — traded tokens, and where the ranked ones would sit</h2>
+  <div id="plot"></div>
+  <p class="note">Dots: the 128 traded tokens, log market cap against log TVL. Line: the fitted curve. Crosses: the 198 ranked protocols at their implied value. The curve is a power law — a protocol ten times larger in TVL is priced about 3.3 times higher, not ten times — and the scatter around it is why every implied value carries a P25–P75 range.</p>
+</section>
+
+<section class="evidence" aria-label="Evidence">
+  <h2>Evidence — the model, tested, and what did not survive</h2>
+  <div class="evgrid">
+    <div>
+      <h3>Terms tested — median miss as a multiple</h3>
+      <table class="ev"><thead><tr><th>Term</th><th>Leave-one-out</th><th>Walk-forward</th><th>Kept?</th></tr></thead><tbody>
+        <tr><td>Size curve (base)</td><td>×3.399</td><td>×4.093</td><td><b>yes — the model</b></td></tr>
+        <tr><td>7-day growth</td><td>×3.763</td><td>×3.901</td><td>no</td></tr>
+        <tr><td>Age (log years listed)</td><td>×3.424</td><td>×3.925</td><td>no</td></tr>
+        <tr><td>Chain count (log)</td><td>×3.802</td><td>×3.944</td><td>no</td></tr>
+        <tr><td>Growth + age + chains</td><td>×3.723</td><td>×3.896</td><td>no</td></tr>
+        <tr><td>Category effect (ridge 64)</td><td>×3.511</td><td>×4.092</td><td>no</td></tr>
+        <tr><td>Family effect (ridge 16)</td><td>×3.399</td><td>×4.093</td><td>no</td></tr>
+        <tr><td>All terms + category</td><td>×3.917</td><td>×4.011</td><td>no</td></tr>
+        <tr><td>Control: another protocol's growth</td><td>×3.501</td><td>×4.357</td><td>no — must not help, and it doesn't</td></tr>
+      </tbody></table>
+      <p class="note">Walk-forward fits on comps listed ≥ 900 days and tests the newer ones. A term is kept only when it lowers the miss in <i>both</i> tests. Growth, age and chains each help the walk-forward and hurt leave-one-out, so none of them enters a price. The flat 0.25× multiple misses ×4.91 in-sample and ×5.52 walk-forward — the curve beats it in both.</p>
+    </div>
+    <div>
+      <h3>Token odds — the peers' record</h3>
+      <table class="ev"><thead><tr><th>Age listed</th><th>Peers</th><th>Record a token</th></tr></thead><tbody>
+        <tr><td>0–1 yr</td><td>116</td><td>31.0%</td></tr>
+        <tr><td>1–2 yr</td><td>124</td><td>38.7%</td></tr>
+        <tr><td>2–3 yr</td><td>64</td><td>62.5%</td></tr>
+        <tr><td>3 yr +</td><td>79</td><td>86.1%</td></tr>
+      </tbody></table>
+      <p class="note">Logit: −0.22 + 0.71 · ln(age in years) + 0.19 · (ln TVL − ln peer median) − 3.32 · growth. Brier: leave-one-out 0.213 against a base-rate 0.247; walk-forward 0.248 against 0.432; called right 63.4% walk-forward. Growth kept here — it helps both tests for odds, though not for value. A protocol with no listed date is scored at the peer median age, and the detail view says so.</p>
+      <h3>Are the ranges honest?</h3>
+      <table class="ev"><thead><tr><th>Range</th><th>Log width</th><th>Share inside</th><th>Stated</th></tr></thead><tbody>
+        <tr><td>P25–P75</td><td>−1.17 to +1.46</td><td>51%</td><td>50%</td></tr>
+        <tr><td>P10–P90</td><td>−3.01 to +2.18</td><td>81%</td><td>80%</td></tr>
+      </tbody></table>
+      <p class="note">Residual quantiles of the size curve's leave-one-out errors, applied to each row's implied value. The ranges hold about what they claim — a P25–P75 that held 51% of the comps, not 90%.</p>
+    </div>
+    <div>
+      <h3>Ledger — the 758, by group</h3>
+      <table class="ev"><thead><tr><th>Group</th><th>n</th><th>Why</th></tr></thead><tbody id="ledgerTable"></tbody></table>
+      <h3>Farm economics — the defaults</h3>
+      <table class="ev"><tbody>
+        <tr><td>Deposit tier</td><td>≥ $1B → $10,000 · $100M–$1B → $5,000 · &lt; $100M → $1,000</td></tr>
+        <tr><td>Expected drop</td><td>implied × drop share (7%) × deposit / TVL</td></tr>
+        <tr><td>Fees</td><td>6 transactions on the first chain: Ethereum $8.00 · Solana $0.01 · Base / Polygon $0.05 · Arbitrum / Optimism $0.10 · BSC $0.15 · Avalanche $0.30 · other $0.50</td></tr>
+        <tr><td>Time</td><td>1.7 h baseline (setup 0.25 + weekly 0.1 × 12 + claim / exit 0.25), +0.5 h for Dexs, Yield, Derivatives, Options, Leveraged Farming, Prediction Market</td></tr>
+        <tr><td>Benchmarks</td><td>net is cash after gas; the $25 / h test is where your time is charged — subtracting it from net too would charge the hours twice. Cash benchmark: 4% T-bill over 12 weeks.</td></tr>
+        <tr><td>Verdict</td><td>FARM when net beats the T-bill <i>and</i> net / h beats $25; MARGINAL when net is positive but below either; SKIP when net is zero or negative</td></tr>
+      </tbody></table>
+      <p class="note"><b>At the default scenario nothing is FARM: 0 of 198.</b> That is the arithmetic, not a missing row: the binding bar is net / h &gt; $25, which needs implied / TVL above 0.614 at the $1,000 tier — the size curve caps that ratio near 0.60 — and above 0.123 at the $5,000 tier, a band around $100M TVL with odds ≥ 0.8 that no row in this snapshot sits in. Scale the deposit to 2×, or the drop share toward 15%, and the small high-odds rows flip to FARM live. The 136 MARGINAL rows are the ones to watch: close, and named with the number that would flip them.</p>
+    </div>
+  </div>
+</section>
+
+<section class="method" aria-label="Method">
+  <h2>How the figure is made — and what it is not</h2>
+  <p>Every row shows the same decomposition: TVL → size curve → value if it launches → token odds → implied value. The size curve is fitted on the traded tokens in this snapshot, and only on them; the odds are fitted on the eligible peers, and only on them. No protocol's name is hardcoded anywhere in the program — the ranking, the odds and the verdicts all come from the snapshot's figures, and running the program on a later snapshot would rank that snapshot's protocols the same way. A protocol whose name matches a traded token's stem or symbol is flagged <b>Kin</b>: it may be a sibling product of a token that already trades, and its odds are read with that in mind.</p>
+  <p>Seven-day growth is clamped to −60% / +120% so one wild week cannot price a protocol, and a missing growth figure is read as flat. A missing listed date is read as the peer median age. TVL is read as printed; a protocol's market cap, when DefiLlama records one, is never used to rank it — traded tokens are comps, never candidates. The board is deterministic: the same snapshot always writes the same board, and the bootstrap rank ranges come from 200 refits on a fixed seed.</p>
+  <p>What this is not: a prediction that a token will be issued, a promise of an airdrop, or financial advice. Farming costs real gas and real hours, and the drop a protocol pays, if it pays one, is its own decision. The verdicts compare farming with a T-bill and with $25 an hour of your time because those are the alternatives a reader actually has.</p>
+</section>
+
+<footer>Launch Radar · built by the program in this repository from the sealed 14 Nov 2026 snapshot (DefiLlama via make.fun) · dashboard source is the whole entry: no network, no framework, no tracking.</footer>
+
 <script src="../data.js"></script>
 <script src="app.js"></script>
 </body>
