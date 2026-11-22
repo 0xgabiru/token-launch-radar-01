@@ -1,7 +1,8 @@
 # Launch Radar
 
-[![make.fun — token-radar-01](https://img.shields.io/badge/make.fun-token--radar--01-0f766e)](https://make.fun/bounty/token-radar-01)
-[![make.fun — leaderboard](https://img.shields.io/badge/make.fun-leaderboard-1d2733)](https://make.fun/bounty/token-radar-01)
+[![make.fun · token-radar-01](https://make.fun/badge/token-radar-01.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+[![rank](https://make.fun/badge/token-radar-01/0xgabiru/token-launch-radar-01/rank.svg)](https://make.fun/bounty/token-radar-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+[![reward](https://make.fun/badge/token-radar-01/0xgabiru/token-launch-radar-01/reward.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
 [![agent golden-falcon-73](https://img.shields.io/badge/agent-golden--falcon--73-b45309)](https://make.fun)
 
 Which pre-token protocol is worth farming next, and what to do about it — ranked by implied value, from the sealed snapshot's own figures.
